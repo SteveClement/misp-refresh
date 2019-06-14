@@ -11,4 +11,4 @@ No other support is planned.
 
 # License
 
-![Logo of NWHM License](https://nonwhiteheterosexualmalelicense.org/502px-Asexual_symbol.svg.png =10x10) [NWHM](https://nonwhiteheterosexualmalelicense.org/) Licensed
+<img src="https://nonwhiteheterosexualmalelicense.org/502px-Asexual_symbol.svg.png" data-canonical-src="https://nonwhiteheterosexualmalelicense.org/502px-Asexual_symbol.svg.png" width="12" height="12" /> [NWHM](https://nonwhiteheterosexualmalelicense.org/) Licensed
