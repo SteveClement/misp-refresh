@@ -6,8 +6,18 @@ No other support is planned.
 
 # Requirements
 
-* A MISP install, ideally standard as directed in the Documentation or installed via the Installer
+* A MISP install. Ideally as directed in the [documentation](https://misp.github.io/MISP/INSTALL.ubuntu1804/) or installed via the [installer](https://github.com/MISP/MISP/blob/2.4/INSTALL/INSTALL.sh)
 * bash
+
+# What does it do?
+
+It will, by default, ask a bunch of questions what you want to do with your MISP instance.
+
+Like: wipe all the data, re-generate SSL certificates, re-generate server SSH keys, rename base organisation, ...
+
+# Usage
+
+wget --no-cache -O /tmp/refresh.sh https://raw.githubusercontent.com/SteveClement/misp-refresh/master/refresh.sh ; bash /tmp/refresh.sh
 
 # License
 

@@ -18,3 +18,11 @@ ask_o () {
   done
 
 }
+
+ask_o "Do you want to wipe this MISP instance?"
+
+ask_o "Do you want to reset the Base Organisation?"
+
+ask_o "Do you want to regenerate the self-signed SSL certificate?"
+
+ask_o "Do you want to regenerate the SSH server keys?"
