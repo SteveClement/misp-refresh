@@ -2,24 +2,31 @@
 
 # Variables section begin
 
-# This makes use of the standard variables used by the installer
-echo "Fetching MISP globalVariables"
-eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/globalVariables.md | grep -v \`\`\`)"
-MISPvars > /dev/null 2>&1
-
+PATH_TO_MISP="/var/www/MISP"
 if [ ! -d ${PATH_TO_MISP} ]; then
   echo "This script expects MISP to be installed in ${PATH_TO_MISP}, it does not exist, bye."
   exit 126
 fi
 
-if [ $(jq ; echo $?) == 127 ]; then
+# This makes use of the standard variables used by the installer
+echo "Fetching MISP globalVariables"
+eval "$(cat /var/www/MISP/docs/generic/globalVariables.md | grep -v \`\`\`)"
+MISPvars > /dev/null 2>&1
+
+if [ $(jq --version > /dev/null 2>&1; echo $?) == 127 ]; then
   echo "jq not found, please install: sudo apt install jq"
   exit 127
 fi
 
+if [ "$(cat $PATH_TO_MISP/VERSION.json |jq -r .hotfix)" -le "108" ]; then
+  echo "You need at least MISP v2.4.109 for this to work properly"
+  exit 1
+fi
+
+
 # Include the lovely supportFunctions that are the base of MISP installer
 echo "Fetching MISP supportFunctions"
-eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/supportFunctions.md | grep -v \`\`\`)"
+eval "$(cat $PATH_TO_MISP/docs/generic/supportFunctions.md | grep -v \`\`\`)"
 
 # Combine SUDO_WWW and CAKE for ease of use
 CAKE="$SUDO_WWW$CAKE"
