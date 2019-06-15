@@ -136,9 +136,13 @@ reset-texts () {
   space
   space
   for setting in $(echo "footermidleft footermidright welcome_text_top welcome_text_bottom"); do
-    echo -n "Please enter text for '${setting}': "
+    echo -n "Please enter text for '${setting}' (Enter for blank): "
     read VALUE
-    $CAKE Admin setSetting "MISP.${setting}" "$VALUE"
+    if [ -z $VALUE ]; then
+      $CAKE Admin setSetting "MISP.${setting}" false
+    else
+      $CAKE Admin setSetting "MISP.${setting}" "$VALUE"
+    fi
   done
 
   rc "All done."
