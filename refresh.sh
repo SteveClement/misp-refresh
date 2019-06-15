@@ -188,10 +188,16 @@ regen-cert () {
 regen-ssh () {
   echo "Removing: /etc/ssh/ssh_host_* (forcefully)"
   sudo rm -vf /etc/ssh/ssh_host_*
-  echo '#!/bin/bash
+
+  # Check if we can handle the firstBoot script, else just regen NOW
+  if [ "$(grep firstBoot /etc/rc.local > /dev/null 2>&1 ; echo $?)" != "0" ]; then
+    sudo /usr/sbin/dpkg-reconfigure openssh-server
+  else
+    echo '#!/bin/bash
 /usr/sbin/dpkg-reconfigure openssh-server
 rm $0' |sudo tee /etc/init.d/firstBoot
-  sudo chmod +x /etc/init.d/firstBoot
+    sudo chmod +x /etc/init.d/firstBoot
+  fi
   rc "Please reboot to regenerate SSH keys."
 }
 
