@@ -18,6 +18,10 @@ if [ $(jq --version > /dev/null 2>&1; echo $?) == 127 ]; then
   exit 127
 fi
 
+if [ $(dialog > /dev/null 2>&1; echo $?) == 0 ]; then
+  DIALOG=1
+fi
+
 if [ "$(cat $PATH_TO_MISP/VERSION.json |jq -r .hotfix)" -le "108" ]; then
   echo "You need at least MISP v2.4.109 for this to work properly"
   exit 1
@@ -245,29 +249,43 @@ regen-gpg () {
 
 
 # Main section begin
+
+if [ ! -z $DIALOG ]; then
+  OPTIONS=$(dialog --checklist --output-fd 1 "Choose what operations to perform:" 15 60 7 \
+        wipe "Wipe MISP instance" off \
+        baseU "Reset BaseURL" off \
+        baseO "Reset Base Organisation" off \
+        texts "Reset Welcome Texts and Footers" off \
+        SSL "Regenerate self-signed SSL Cert " off \
+        SSH "Regenerate SSH server key" off \
+        GPG "Regenerate MISP GPG Key" off)
+#        upd "Update MISP" off \
+fi
+
 # Use misp-wipe.sh to clean everything
-ask_o "Do you want to wipe this MISP instance?"
-[[ "${ANSWER}" == "y" ]] && misp-wipe
+[[ -z $DIALOG ]] && ask_o "Do you want to wipe this MISP instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
+case $OPTIONS in *"wipe"*) misp-wipe ;; esac
 
-ask_o "Do you want to reset the BaseURL?"
-[[ "${ANSWER}" == "y" ]] && reset-baseurl
+[[ -z $DIALOG ]] && ask_o "Do you want to reset the BaseURL?" && [[ "${ANSWER}" == "y" ]] && reset-baseurl
+case $OPTIONS in *"baseU"*) reset-baseurl ;; esac
 
-ask_o "Do you want to reset the Base Organisation?"
-[[ "${ANSWER}" == "y" ]] && reset-org
+[[ -z $DIALOG ]] && ask_o "Do you want to reset the Base Organisation?" && [[ "${ANSWER}" == "y" ]] && reset-org
+case $OPTIONS in *"baseO"*) reset-org ;; esac
 
-ask_o "Do you want to reset the welcome texts and footers?"
-[[ "${ANSWER}" == "y" ]] && reset-texts
+[[ -z $DIALOG ]] && ask_o "Do you want to reset the welcome texts and footers?" && [[ "${ANSWER}" == "y" ]] && reset-texts
+case $OPTIONS in *"texts"*) reset-texts ;; esac
 
-ask_o "Do you want to regenerate the self-signed SSL certificate?"
-[[ "${ANSWER}" == "y" ]] && regen-cert
+[[ -z $DIALOG ]] && ask_o "Do you want to regenerate the self-signed SSL certificate?" && [[ "${ANSWER}" == "y" ]] && regen-cert
+case $OPTIONS in *"SSL"*) regen-cert ;; esac
 
-ask_o "Do you want to regenerate the SSH server keys?"
-[[ "${ANSWER}" == "y" ]] && regen-ssh
+[[ -z $DIALOG ]] && ask_o "Do you want to regenerate the SSH server keys?" && [[ "${ANSWER}" == "y" ]] && regen-ssh
+case $OPTIONS in *"SSH"*) regen-ssh ;; esac
 
-ask_o "Do you want to regenerate the MISP GPG keys?"
-[[ "${ANSWER}" == "y" ]] && regen-gpg
+[[ -z $DIALOG ]] && ask_o "Do you want to regenerate the MISP GPG keys?" && [[ "${ANSWER}" == "y" ]] && regen-gpg
+case $OPTIONS in *"GPG"*) regen-gpg ;; esac
 
 #ask_o "Do you want to update MISP?
-#[[ "${ANSWER}" == "y" ]] && update-misp
+#[[ "${ANSWER}" == "y" ]] && misp-update
+#case $OPTIONS in *"upd"*) misp-update ;; esac
 
 # Main section end
