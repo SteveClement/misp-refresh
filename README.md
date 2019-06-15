@@ -10,6 +10,7 @@ No other support is planned.
 * Minimum MISP version 2.4.109
 * bash
 * jq
+* dialog (optional)
 
 # What does it do?
 
