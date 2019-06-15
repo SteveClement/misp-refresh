@@ -63,10 +63,10 @@ reset-org () {
   VALUE=$(echo "$CAKE_ORG"| cut -f 2)
   echo -e "The value of MISP.org is: $VALUE\n"
   echo "Here is the description of the setting: $DESCRIPTION"
-  echo -n "Please enter the new Org name: "
+  echo -n "Please enter the new Orga short-tag (misppriv uses 'CIRCL'): "
   read NEW_ORG
   $CAKE Admin setSetting "MISP.org" "$NEW_ORG"
-  rc "New Base Organisation name: $NEW_ORG"
+  rc "New Base Organisation short-tag: $NEW_ORG"
 
   ask_o "Do you want to reset the Organisation UUID?"
   if [[ "$ANSWER" == "y" ]]; then
