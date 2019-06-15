@@ -12,6 +12,11 @@ if [ ! -d ${PATH_TO_MISP} ]; then
   exit 126
 fi
 
+if [ $(jq ; echo $?) == 127 ]; then
+  echo "jq not found, please install: sudo apt install jq"
+  exit 127
+fi
+
 # Include the lovely supportFunctions that are the base of MISP installer
 echo "Fetching MISP supportFunctions"
 eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/supportFunctions.md | grep -v \`\`\`)"

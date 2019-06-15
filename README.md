@@ -7,7 +7,9 @@ No other support is planned.
 # Requirements
 
 * A MISP install. Ideally as directed in the [documentation](https://misp.github.io/MISP/INSTALL.ubuntu1804/) or installed via the [installer](https://github.com/MISP/MISP/blob/2.4/INSTALL/INSTALL.sh)
+* Minimum MISP version 2.4.109
 * bash
+* jq
 
 # What does it do?
 
