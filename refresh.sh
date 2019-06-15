@@ -228,6 +228,8 @@ regen-gpg () {
       %commit
     %echo done" > /tmp/gen-key-script
 
+
+  echo "The generation WILL take some time, please be patient."
   $SUDO_WWW gpg --homedir $PATH_TO_MISP/.gnupg --batch --gen-key /tmp/gen-key-script
 
   # Export the public key to the webroot
