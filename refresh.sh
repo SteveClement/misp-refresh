@@ -152,7 +152,11 @@ regen-cert () {
 
 regen-ssh () {
   echo "Removing: /etc/ssh/ssh_host_* (forcefully)"
-  sudo rm -f /etc/ssh/ssh_host_*
+  sudo rm -vf /etc/ssh/ssh_host_*
+  echo "#!/bin/bash
+/usr/sbin/dpkg-reconfigure openssh-server
+rm $0" |sudo tee /etc/init.d/script
+  sudo chmod +x /etc/init.d/script
   rc "Please reboot to regenerate SSH keys."
 }
 
