@@ -155,8 +155,8 @@ regen-ssh () {
   sudo rm -vf /etc/ssh/ssh_host_*
   echo "#!/bin/bash
 /usr/sbin/dpkg-reconfigure openssh-server
-rm $0" |sudo tee /etc/init.d/script
-  sudo chmod +x /etc/init.d/script
+rm $0" |sudo tee /etc/init.d/firstBoot
+  sudo chmod +x /etc/init.d/firstBoot
   rc "Please reboot to regenerate SSH keys."
 }
 
