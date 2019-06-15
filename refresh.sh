@@ -155,25 +155,25 @@ regen-cert () {
 
   ask_o "Using $FQDN as common name, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
-    echo "Please enter the certificate common name: "
+    echo -n "Please enter the certificate common name: "
     read OPENSSL_CN
   fi
 
   ask_o "Using $OPENSSL_EMAILADDRESS as contact email for the certificate, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
-    echo "Please enter the certificate contact email: "
+    echo -n "Please enter the certificate contact email: "
     read OPENSSL_EMAILADDRESS
   fi
 
   ask_o "Using $OPENSSL_O as Organisation, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
-    echo "Please enter the certificate Organisation: "
+    echo -n "Please enter the certificate Organisation: "
     read OPENSSL_O
   fi
 
   ask_o "Using $OPENSSL_C as ISO Country Code, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
-    echo "Please enter the ISO Country Code for the certificate: "
+    echo -n "Please enter the ISO Country Code for the certificate: "
     read OPENSSL_O
   fi
 
@@ -197,7 +197,7 @@ rm $0' |sudo tee /etc/init.d/firstBoot
 
 regen-gpg () {
   echo "Removing '$PATH_TO_MISP/.gnupg' (forcefully)"
-  rm -rf $PATH_TO_MISP/.gnupg
+  sudo rm -rf $PATH_TO_MISP/.gnupg
 
   echo -n "Please enter a 'Real Name' for your GPG Key. (misppriv@circl.lu uses: MISP CIRCL for Private Sector): "
   read GPG_REAL_NAME
