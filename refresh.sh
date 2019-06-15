@@ -138,7 +138,7 @@ reset-texts () {
   for setting in $(echo "footermidleft footermidright welcome_text_top welcome_text_bottom"); do
     echo -n "Please enter text for '${setting}': "
     read VALUE
-    $CAKE Admin setSetting "MISP.{setting}" "$VALUE"
+    $CAKE Admin setSetting "MISP.${setting}" "$VALUE"
   done
 
   rc "All done."
