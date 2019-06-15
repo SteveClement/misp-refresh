@@ -113,25 +113,25 @@ reset-texts () {
   CAKE_FOOTER_LEFT=$($CAKE Admin getSetting "MISP.footermidleft" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_FOOTER_LEFT"| cut -f 1)
   VALUE=$(echo "$CAKE_FOOTER_LEFT"| cut -f 2)
-  echo "The value of MISP.footermidleft is: $VALUE\n"
+  echo -e "The value of MISP.footermidleft is: $VALUE\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   CAKE_FOOTER_RIGHT=$($CAKE Admin getSetting "MISP.footermidright" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_FOOTER_RIGHT"| cut -f 1)
   VALUE=$(echo "$CAKE_FOOTER_RIGHT"| cut -f 2)
-  echo "The value of MISP.footermidright is: $VALUE\n"
+  echo -e "The value of MISP.footermidright is: $VALUE\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   CAKE_TEXT_TOP=$($CAKE Admin getSetting "MISP.welcome_text_top" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_TEXT_TOP"| cut -f 1)
   VALUE=$(echo "$CAKE_TEXT_TOP"| cut -f 2)
-  echo "The value of MISP.welcome_text_top is: $VALUE\n"
+  echo -e "The value of MISP.welcome_text_top is: $VALUE\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   CAKE_TEXT_BOTTOM=$($CAKE Admin getSetting "MISP.welcome_text_bottom" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_TEXT_BOTTOM"| cut -f 1)
   VALUE=$(echo "$CAKE_TEXT_BOTTOM"| cut -f 2)
-  echo "The value of MISP.welcome_text_bottom is: $VALUE\n"
+  echo -e "The value of MISP.welcome_text_bottom is: $VALUE\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   space
@@ -145,21 +145,40 @@ reset-texts () {
 }
 
 regen-cert () {
-  # OpenSSL configuration
-  OPENSSL_CN=$FQDN
-  OPENSSL_C='LU'
-  OPENSSL_ST='State'
-  OPENSSL_L='Location'
-  OPENSSL_O='Organization'
-  OPENSSL_OU='Organizational Unit'
-  OPENSSL_EMAILADDRESS="info@$FQDN"
+  CAKE_ORG=$($CAKE Admin getSetting "MISP.org" |tail -n +7 |jq -r '[.description,.value] |@tsv')
+  VALUE=$(echo "$CAKE_ORG"| cut -f 2)
+  OPENSSL_O=$VALUE
+
+  ask_o "Using $FQDN as common name, do you want to change it?"
+  if [[ "$ANSWER" == "y" ]]; then
+    echo "Please enter the certificate common name: "
+    read OPENSSL_CN
+  fi
+
+  ask_o "Using $OPENSSL_EMAILADDRESS as contact email for the certificate, do you want to change it?"
+  if [[ "$ANSWER" == "y" ]]; then
+    echo "Please enter the certificate contact email: "
+    read OPENSSL_EMAILADDRESS
+  fi
+
+  ask_o "Using $OPENSSL_O as Organisation, do you want to change it?"
+  if [[ "$ANSWER" == "y" ]]; then
+    echo "Please enter the certificate Organisation: "
+    read OPENSSL_O
+  fi
+
+  ask_o "Using $OPENSSL_C as ISO Country Code, do you want to change it?"
+  if [[ "$ANSWER" == "y" ]]; then
+    echo "Please enter the ISO Country Code for the certificate: "
+    read OPENSSL_O
+  fi
 
   sudo openssl req -newkey rsa:4096 -days 365 -nodes -x509 \
-  -subj "/C=${OPENSSL_C}/ST=${OPENSSL_ST}/L=${OPENSSL_L}/O=${OPENSSL_O}/OU=${OPENSSL_OU}/CN=${OPENSSL_CN}/emailAddress=${OPENSSL_EMAILADDRESS}" \
+  -subj "/C=${OPENSSL_C}/O=${OPENSSL_O}/CN=${OPENSSL_CN}/emailAddress=${OPENSSL_EMAILADDRESS}" \
   -keyout /etc/ssl/private/misp.local.key -out /etc/ssl/private/misp.local.crt
   sudo systemctl restart apache2
 
-  rc "New certificate created."
+  rc "New certificate created.\nPlease consider using a Signed certificate like https://letsencrypt.org/"
 }
 
 regen-ssh () {
