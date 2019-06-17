@@ -148,7 +148,7 @@ reset-org () {
     $CAKE Admin setSetting "MISP.uuid" "$NEW_UUID"
     # Set the new UUID in the existing base organisation via PyMISP
     getOrgInfo
-    ORGA_NAME=$(echo $orgInfo |jq .Organisation.name)
+    ORGA_NAME=$(echo $orgInfo |jq -r .Organisation.name)
     ORGA_UUID=$NEW_UUID
     if [[ $(chkVenv) == "0" ]]; then
       echo $ORGA_JSON | sed "s/#ORGA_UUID#/$ORGA_UUID/" | sed "s/#ORGA_NAME#/$ORGA_NAME/" > /tmp/orga.json
@@ -182,7 +182,7 @@ reset-org () {
     read NEW_MAIL
     # Set the new UUID in the existing base organisation via PyMISP
     getUserInfo
-    USER_MAIL=$(echo $orgInfo |jq .User.email)
+    USER_MAIL=$(echo $orgInfo |jq -r .User.email)
     if [[ $(chkVenv) == "0" ]]; then
       echo $USER_JSON | sed "s/#EMAIL_ADDRESS#/$USER_MAIL/" > /tmp/user.json
       $PATH_TO_MISP/venv/bin/python /tmp/edit_user_json.py -i 1 -f /tmp/user.json
