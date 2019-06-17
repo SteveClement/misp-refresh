@@ -72,7 +72,7 @@ rc () {
 }
 
 misp-wipe () {
-  echo -e "${RED}/!\\${NC} THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE MISP INSTANCE${NC}!\nThe default id=1 is NOT wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
+  echo -e "${RED}/!\\ ${NC} THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE MISP INSTANCE${NC}!\nThe default id=1 is NOT wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
   read
   echo "PATH_TO_MISP=${PATH_TO_MISP}" |$SUDO_WWW tee ${PATH_TO_MISP}/tools/misp-wipe/misp-wipe.conf
   cd ${PATH_TO_MISP}/tools/misp-wipe
