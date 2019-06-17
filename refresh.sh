@@ -182,7 +182,7 @@ reset-org () {
     read NEW_MAIL
     # Set the new UUID in the existing base organisation via PyMISP
     getUserInfo
-    USER_MAIL=$(echo $orgInfo |jq -r .User.email)
+    USER_MAIL=$(echo $userInfo |jq -r .User.email)
     if [[ $(chkVenv) == "0" ]]; then
       echo $USER_JSON | sed "s/#EMAIL_ADDRESS#/$USER_MAIL/" > /tmp/user.json
       $PATH_TO_MISP/venv/bin/python /tmp/edit_user_json.py -i 1 -f /tmp/user.json 2> /dev/null
