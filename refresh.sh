@@ -53,8 +53,18 @@ AUTH_KEY=$(mysql --disable-column-names -B  -u $DBUSER_MISP -p"$DBPASSWORD_MISP"
 
 # Functions section begin
 
+colors () {
+  # Some colors for easier debug and better UX (not colorblind compatible, PR welcome)
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  LBLUE='\033[1;34m'
+  YELLOW='\033[0;33m'
+  HIDDEN='\e[8m'
+  NC='\033[0m'
+}
+
 rc () {
-  echo -e "$1 Press enter to continue."
+  echo -e "$1 ${LBLUE}Press enter to continue.${NC}"
   space
   space
   read
@@ -62,12 +72,12 @@ rc () {
 }
 
 misp-wipe () {
-  echo -e "/\!\\ THE FOLLOWING WILL WIPE YOUR ENTIRE MISP INSTANCE\!\nThe default id=1 is NOT wiped.\nPRESS ENTER TO CONTINUE..."
+  echo -e "${RED}/!\\${NC} THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE MISP INSTANCE${NC}!\nThe default id=1 is NOT wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
   read
   echo "PATH_TO_MISP=${PATH_TO_MISP}" |$SUDO_WWW tee ${PATH_TO_MISP}/tools/misp-wipe/misp-wipe.conf
   cd ${PATH_TO_MISP}/tools/misp-wipe
   sudo ./misp-wipe.sh
-  rc "Wipe done."
+  rc "${GREEN}Wipe done.${NC}"
 }
 
 genKeys () {
@@ -93,13 +103,13 @@ import json
 misp = ExpandedPyMISP(misp_url, misp_key, misp_verifycert)
 
 print(json.dumps(misp.edit_user(1)))' |tee /tmp/getUserInfo.py 1> /dev/null
-cp $PATH_TO_MISP/PyMISP/examples/edit_user_json.py /tmp
-# Next line needs merging up-stream
-if [[ ! -e $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py ]]; then
-  wget --no-cache -O /tmp/edit_organisation_json.py https://raw.githubusercontent.com/MISP/PyMISP/master/examples/edit_organisation_json.py
-else
-  cp $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py /tmp
-fi
+  cp $PATH_TO_MISP/PyMISP/examples/edit_user_json.py /tmp
+  # Next line needs merging up-stream
+  if [[ ! -e $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py ]]; then
+    wget --no-cache -O /tmp/edit_organisation_json.py https://raw.githubusercontent.com/MISP/PyMISP/master/examples/edit_organisation_json.py
+  else
+    cp $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py /tmp
+  fi
 }
 
 getOrgInfo () {
@@ -141,7 +151,7 @@ reset-org () {
     echo -e "The value of MISP.uuid is: $VALUE\n"
     echo "Here is the description of the setting: $DESCRIPTION"
     space
-    echo -e "/!\\ Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\nPress enter to continue with change."
+    echo -e "/!\\ Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\n${LBLUE}Press enter to continue with change.${NC}"
     read
     # Set the new UUID into the system settings via Cake
     NEW_UUID=$(uuidgen)
