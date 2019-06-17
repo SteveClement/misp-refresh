@@ -158,6 +158,21 @@ reset-org () {
     rc "The new UUID is: $NEW_UUID"
   fi
 
+  getOrgInfo
+  ORGA_NAME=$(echo $orgInfo |jq -r .Organisation.name)
+  ORGA_UUID=$(echo $orgInfo |jq -r .Organisation.uuid)
+  if [[ $(chkVenv) == "0" ]]; then
+    ask_o "Do you want to reset the Organisation name, currently: ${ORGA_NAME} ?"
+    if [[ "$ANSWER" == "y" ]]; then
+      echo -n "Please enter the new Orga name, can have spaces: "
+      read ORGA_NAME
+      echo $ORGA_JSON | sed "s/#ORGA_UUID#/$ORGA_UUID/" | sed "s/#ORGA_NAME#/$ORGA_NAME/" > /tmp/orga.json
+      $PATH_TO_MISP/venv/bin/python /tmp/edit_organisation_json.py -i 1 -f /tmp/orga.json 2> /dev/null
+    fi
+    
+    rc "The new Name is: $ORGA_NAME"
+  fi
+
   ask_o "Do you want to reset the notification E-Mail?"
   if [[ "$ANSWER" == "y" ]]; then
     CAKE_NOTIFICATION_EMAIL=$($CAKE Admin getSetting "MISP.email" |tail -n +7 |jq -r '[.description,.value] |@tsv')
