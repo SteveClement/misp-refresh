@@ -389,6 +389,9 @@ if [ ! -z $DIALOG ]; then
 #        upd "Update MISP" off \
 fi
 
+# Enable colors
+colors
+
 # Use misp-wipe.sh to clean everything
 [[ -z $DIALOG ]] && ask_o "Do you want to wipe this MISP instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
 case $OPTIONS in *"wipe"*) misp-wipe ;; esac
