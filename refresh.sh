@@ -4,12 +4,12 @@
 
 PATH_TO_MISP="/var/www/MISP"
 if [ ! -d ${PATH_TO_MISP} ]; then
-  echo "This script expects MISP to be installed in ${PATH_TO_MISP}, it does not exist, bye."
+  echo -e "This script expects ${LBLUE}MISP${NC} to be installed in ${YELLOW}${PATH_TO_MISP}${NC}, it does not exist, bye."
   exit 126
 fi
 
 # This makes use of the standard variables used by the installer
-echo "Fetching MISP globalVariables"
+echo -e "Fetching ${LBLUE}MISP${NC} globalVariables"
 eval "$(cat /var/www/MISP/docs/generic/globalVariables.md | grep -v \`\`\`)"
 MISPvars > /dev/null 2>&1
 
@@ -23,12 +23,12 @@ if [ $(dialog > /dev/null 2>&1; echo $?) == 0 ]; then
 fi
 
 if [ "$(cat $PATH_TO_MISP/VERSION.json |jq -r .hotfix)" -le "108" ]; then
-  echo "You need at least MISP v2.4.109 for this to work properly"
+  echo "You need at least ${LBLUE}MISP${NC} v2.4.109 for this to work properly"
   exit 1
 fi
 
 # Include the lovely supportFunctions that are the base of MISP installer
-echo "Fetching MISP supportFunctions"
+echo "Fetching ${LBLUE}MISP${NC} supportFunctions"
 eval "$(cat $PATH_TO_MISP/docs/generic/supportFunctions.md | grep -v \`\`\`)"
 
 # Combine SUDO_WWW and CAKE for ease of use
@@ -64,7 +64,7 @@ colors () {
 }
 
 rc () {
-  echo -e "$1 ${LBLUE}Press enter to continue.${NC}"
+  echo -e "$1 ${GREEN}->${NC} ${LBLUE}Press enter to continue.${NC}"
   space
   space
   read
@@ -72,11 +72,12 @@ rc () {
 }
 
 misp-wipe () {
-  echo -e "${RED}/!\\ ${NC} THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE MISP INSTANCE${NC}!\nThe default id=1 is NOT wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
+  echo -e "${RED}/!\\${NC} THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE${NC} ${LBLUE}MISP${NC} ${RED}INSTANCE${NC}!\nThe default id=1 is NOT wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
   read
   echo "PATH_TO_MISP=${PATH_TO_MISP}" |$SUDO_WWW tee ${PATH_TO_MISP}/tools/misp-wipe/misp-wipe.conf
   cd ${PATH_TO_MISP}/tools/misp-wipe
   sudo ./misp-wipe.sh
+  space
   rc "${GREEN}Wipe done.${NC}"
 }
 
@@ -136,22 +137,22 @@ reset-org () {
   CAKE_ORG=$($CAKE Admin getSetting "MISP.org" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_ORG"| cut -f 1)
   VALUE=$(echo "$CAKE_ORG"| cut -f 2)
-  echo -e "The value of MISP.org is: $VALUE\n"
-  echo "Here is the description of the setting: $DESCRIPTION"
+  echo -e "The value of MISP.org is: ${YELLOW}${VALUE}${NC}\n"
+  echo -e "Here is the description of the setting: ${DESCRIPTION}"
   echo -n "Please enter the new Orga short-tag (misppriv uses 'CIRCL'): "
   read NEW_ORG
-  $CAKE Admin setSetting "MISP.org" "$NEW_ORG"
-  rc "New Base Organisation short-tag: $NEW_ORG"
+  $CAKE Admin setSetting "MISP.org" "${NEW_ORG}"
+  rc "New Base Organisation short-tag: ${YELLOW}${NEW_ORG}${NC}"
 
   ask_o "Do you want to reset the Organisation UUID?"
   if [[ "$ANSWER" == "y" ]]; then
     CAKE_ORG_UUID=$($CAKE Admin getSetting "MISP.uuid" |tail -n +7 |jq -r '[.description,.value] |@tsv')
     DESCRIPTION=$(echo "$CAKE_ORG_UUID"| cut -f 1)
     VALUE=$(echo "$CAKE_ORG_UUID"| cut -f 2)
-    echo -e "The value of MISP.uuid is: $VALUE\n"
+    echo -e "The value of MISP.uuid is: ${YELLOW}${VALUE}${NC}\n"
     echo "Here is the description of the setting: $DESCRIPTION"
     space
-    echo -e "/!\\ Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\n${LBLUE}Press enter to continue with change.${NC}"
+    echo -e "${RED}/!\\${NC} Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\n${LBLUE}Press enter to continue with change.${NC}"
     read
     # Set the new UUID into the system settings via Cake
     NEW_UUID=$(uuidgen)
@@ -165,14 +166,14 @@ reset-org () {
       $PATH_TO_MISP/venv/bin/python /tmp/edit_organisation_json.py -i 1 -f /tmp/orga.json 2> /dev/null
     fi
     
-    rc "The new UUID is: $NEW_UUID"
+    rc "The new UUID is: ${YELLOW}${NEW_UUID}${NC}"
   fi
 
   getOrgInfo
   ORGA_NAME=$(echo $orgInfo |jq -r .Organisation.name)
   ORGA_UUID=$(echo $orgInfo |jq -r .Organisation.uuid)
   if [[ $(chkVenv) == "0" ]]; then
-    ask_o "Do you want to reset the Organisation name, currently: ${ORGA_NAME} ?"
+    ask_o "Do you want to reset the Organisation name, currently: ${YELLOW}${ORGA_NAME}${NC} ?"
     if [[ "$ANSWER" == "y" ]]; then
       echo -n "Please enter the new Orga name, can have spaces: "
       read ORGA_NAME
@@ -180,7 +181,7 @@ reset-org () {
       $PATH_TO_MISP/venv/bin/python /tmp/edit_organisation_json.py -i 1 -f /tmp/orga.json 2> /dev/null
     fi
     
-    rc "The new Name is: $ORGA_NAME"
+    rc "The new Name is: ${YELLOW}${ORGA_NAME}${NC}"
   fi
 
   ask_o "Do you want to reset the notification E-Mail?"
@@ -188,14 +189,14 @@ reset-org () {
     CAKE_NOTIFICATION_EMAIL=$($CAKE Admin getSetting "MISP.email" |tail -n +7 |jq -r '[.description,.value] |@tsv')
     DESCRIPTION=$(echo "$CAKE_NOTIFICATION_EMAIL"| cut -f 1)
     VALUE=$(echo "$CAKE_NOTIFICATION_EMAIL"| cut -f 2)
-    echo -e "The value of MISP.email is: $VALUE\n"
+    echo -e "The value of MISP.email is: ${YELLOW}${VALUE}${NC}\n"
     echo "Here is the description of the setting: $DESCRIPTION"
     space
     echo -n "Please enter the new notification E-Mail Address: "
     read NEW_MAIL
     # Set the new notification E-Mail into the system settings via Cake
     $CAKE Admin setSetting "MISP.email" "$NEW_MAIL"
-    rc "New notification E-Mail address is: $NEW_MAIL"
+    rc "New notification E-Mail address is: ${YELLOW}${NEW_MAIL}${NC}"
   fi
 
   ask_o "Do you want to reset the Base Organisation admin E-Mail?"
@@ -213,7 +214,7 @@ reset-org () {
       $PATH_TO_MISP/venv/bin/python /tmp/edit_user_json.py -i 1 -f /tmp/user.json 2> /dev/null
     fi
     
-    rc "The new E-Mail address is: $NEW_MAIL"
+    rc "The new E-Mail address is: ${YELLOW}${NEW_MAIL}${NC}"
 
   fi
 
@@ -224,7 +225,7 @@ reset-baseurl () {
   CAKE_BASEURL=$($CAKE Admin getSetting "MISP.baseurl" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_BASEURL"| cut -f 1)
   VALUE=$(echo "$CAKE_BASEURL"| cut -f 2)
-  echo -e "The value of MISP.baseurl is: $VALUE\n"
+  echo -e "The value of ${LBLUE}MISP.baseurl${NC} is: ${YELLOW}${VALUE}${NC}\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   echo -n "Please enter the new BaseURL: "
@@ -237,30 +238,30 @@ reset-texts () {
   CAKE_FOOTER_LEFT=$($CAKE Admin getSetting "MISP.footermidleft" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_FOOTER_LEFT"| cut -f 1)
   VALUE=$(echo "$CAKE_FOOTER_LEFT"| cut -f 2)
-  echo -e "The value of MISP.footermidleft is: $VALUE\n"
+  echo -e "The value of ${LBLUE}MISP.footermidleft${NC} is: ${YELLOW}${VALUE}${NC}\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   CAKE_FOOTER_RIGHT=$($CAKE Admin getSetting "MISP.footermidright" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_FOOTER_RIGHT"| cut -f 1)
   VALUE=$(echo "$CAKE_FOOTER_RIGHT"| cut -f 2)
-  echo -e "The value of MISP.footermidright is: $VALUE\n"
+  echo -e "The value of ${LBLUE}MISP.footermidright${NC} is: ${YELLOW}${VALUE}${NC}\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   CAKE_TEXT_TOP=$($CAKE Admin getSetting "MISP.welcome_text_top" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_TEXT_TOP"| cut -f 1)
   VALUE=$(echo "$CAKE_TEXT_TOP"| cut -f 2)
-  echo -e "The value of MISP.welcome_text_top is: $VALUE\n"
+  echo -e "The value of ${LBLUE}MISP.welcome_text_top${NC} is: ${YELLOW}${VALUE}${NC}\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   CAKE_TEXT_BOTTOM=$($CAKE Admin getSetting "MISP.welcome_text_bottom" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_TEXT_BOTTOM"| cut -f 1)
   VALUE=$(echo "$CAKE_TEXT_BOTTOM"| cut -f 2)
-  echo -e "The value of MISP.welcome_text_bottom is: $VALUE\n"
+  echo -e "The value of ${LBLUE}MISP.welcome_text_bottom${NC} is: ${YELLOW}${VALUE}${NC}\n"
   echo "Here is the description of the setting: $DESCRIPTION"
   space
   space
   for setting in $(echo "footermidleft footermidright welcome_text_top welcome_text_bottom"); do
-    echo -n "Please enter text for '${setting}' (Enter for blank): "
+    echo -n "Please enter text for '${LBLUE}${setting}${NC}' (Enter for blank): "
     read VALUE
     if [ -z $VALUE ]; then
       $CAKE Admin setSetting "MISP.${setting}" false
@@ -277,13 +278,13 @@ regen-cert () {
   VALUE=$(echo "$CAKE_ORG"| cut -f 2)
   OPENSSL_O=$VALUE
 
-  ask_o "Using $FQDN as common name, do you want to change it?"
+  ask_o "Using ${YELLOW}${FQDN}${NC} as common name (CN), do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
     echo -n "Please enter the certificate common name: "
     read OPENSSL_CN
   fi
 
-  ask_o "Using $OPENSSL_EMAILADDRESS as contact email for the certificate, do you want to change it?"
+  ask_o "Using ${YELLOW}${OPENSSL_EMAILADDRESS}${NC} as contact email for the certificate, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
     echo -n "Please enter the certificate contact email: "
     read OPENSSL_EMAILADDRESS
@@ -291,13 +292,13 @@ regen-cert () {
 
   getOrgInfo
   OPENSSL_O=$(echo $orgInfo |jq -r .Organisation.name)
-  ask_o "Using $OPENSSL_O as Organisation, do you want to change it?"
+  ask_o "Using ${YELLOW}${OPENSSL_O}${NC} as Organisation, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
     echo -n "Please enter the certificate Organisation: "
     read OPENSSL_O
   fi
 
-  ask_o "Using $OPENSSL_C as ISO Country Code, do you want to change it?"
+  ask_o "Using ${YELLOW}${OPENSSL_C}${NC} as ISO Country Code, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
     echo -n "Please enter the ISO Country Code for the certificate: "
     read OPENSSL_O
@@ -308,7 +309,7 @@ regen-cert () {
   -keyout /etc/ssl/private/misp.local.key -out /etc/ssl/private/misp.local.crt
   sudo systemctl restart apache2
 
-  rc "New certificate created.\nPlease consider using a Signed certificate like https://letsencrypt.org/"
+  rc "New self-signed certificate created.\nPlease consider using a Signed-ish certificate like https://letsencrypt.org/"
 }
 
 regen-ssh () {
@@ -335,7 +336,7 @@ regen-gpg () {
   read GPG_REAL_NAME
   echo -n "Enter an E-Mail address for the Key: "
   read GPG_EMAIL_ADDRESS
-  ask_o "The Autogenerated Password for this key is: '$GPG_PASSPHRASE'. Do you want to change it?"
+  ask_o "The Autogenerated Password for this key is: '${YELLOW}${GPG_PASSPHRASE}${NC}'. Do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
     echo -n "Please enter a Passphrase for the GPG Key: "
     read GPG_PASSPHRASE
@@ -363,7 +364,7 @@ regen-gpg () {
   $CAKE Admin setSetting "GnuPG.email" "$GPG_EMAIL_ADDRESS"
   $CAKE Admin setSetting "GnuPG.password" "$GPG_PASSPHRASE"
 
-  rc "New PGP key created."
+  rc "New GPG key created."
 }
 
 cleanUp () {
@@ -393,7 +394,7 @@ fi
 colors
 
 # Use misp-wipe.sh to clean everything
-[[ -z $DIALOG ]] && ask_o "Do you want to wipe this MISP instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
+[[ -z $DIALOG ]] && ask_o "Do you want to wipe this ${LBLUE}MISP${NC} instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
 case $OPTIONS in *"wipe"*) misp-wipe ;; esac
 
 [[ -z $DIALOG ]] && ask_o "Do you want to reset the BaseURL?" && [[ "${ANSWER}" == "y" ]] && reset-baseurl
@@ -411,7 +412,7 @@ case $OPTIONS in *"SSL"*) regen-cert ;; esac
 [[ -z $DIALOG ]] && ask_o "Do you want to regenerate the SSH server keys?" && [[ "${ANSWER}" == "y" ]] && regen-ssh
 case $OPTIONS in *"SSH"*) regen-ssh ;; esac
 
-[[ -z $DIALOG ]] && ask_o "Do you want to regenerate the MISP GPG keys?" && [[ "${ANSWER}" == "y" ]] && regen-gpg
+[[ -z $DIALOG ]] && ask_o "Do you want to regenerate the ${LBLUE}MISP${NC} GPG keys?" && [[ "${ANSWER}" == "y" ]] && regen-gpg
 case $OPTIONS in *"GPG"*) regen-gpg ;; esac
 
 #ask_o "Do you want to update MISP?
