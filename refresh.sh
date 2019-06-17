@@ -72,7 +72,7 @@ rc () {
 }
 
 misp-wipe () {
-  echo -e "${RED}/!\\${NC} THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE${NC} ${LBLUE}MISP${NC} ${RED}INSTANCE${NC}!\nThe default id=1 is NOT wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
+  echo -e "${RED}/!\\ ${NC} THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE${NC} ${LBLUE}MISP${NC} ${RED}INSTANCE${NC}!\nThe default id=1 is NOT wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
   read
   echo "PATH_TO_MISP=${PATH_TO_MISP}" |$SUDO_WWW tee ${PATH_TO_MISP}/tools/misp-wipe/misp-wipe.conf
   cd ${PATH_TO_MISP}/tools/misp-wipe
@@ -152,7 +152,7 @@ reset-org () {
     echo -e "The value of MISP.uuid is: ${YELLOW}${VALUE}${NC}\n"
     echo "Here is the description of the setting: $DESCRIPTION"
     space
-    echo -e "${RED}/!\\${NC} Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\n${LBLUE}Press enter to continue with change.${NC}"
+    echo -e "${RED}/!\\ ${NC} Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\n${LBLUE}Press enter to continue with change.${NC}"
     read
     # Set the new UUID into the system settings via Cake
     NEW_UUID=$(uuidgen)
