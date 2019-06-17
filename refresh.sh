@@ -152,7 +152,7 @@ reset-org () {
     ORGA_UUID=$NEW_UUID
     if [[ $(chkVenv) == "0" ]]; then
       echo $ORGA_JSON | sed "s/#ORGA_UUID#/$ORGA_UUID/" | sed "s/#ORGA_NAME#/$ORGA_NAME/" > /tmp/orga.json
-      $PATH_TO_MISP/venv/bin/python /tmp/edit_organisation_json.py -i 1 -f /tmp/orga.json
+      $PATH_TO_MISP/venv/bin/python /tmp/edit_organisation_json.py -i 1 -f /tmp/orga.json 2> /dev/null
     fi
     
     rc "The new UUID is: $NEW_UUID"
@@ -185,7 +185,7 @@ reset-org () {
     USER_MAIL=$(echo $orgInfo |jq -r .User.email)
     if [[ $(chkVenv) == "0" ]]; then
       echo $USER_JSON | sed "s/#EMAIL_ADDRESS#/$USER_MAIL/" > /tmp/user.json
-      $PATH_TO_MISP/venv/bin/python /tmp/edit_user_json.py -i 1 -f /tmp/user.json
+      $PATH_TO_MISP/venv/bin/python /tmp/edit_user_json.py -i 1 -f /tmp/user.json 2> /dev/null
     fi
     
     rc "The new UUID is: $NEW_UUID"
