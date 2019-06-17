@@ -27,13 +27,26 @@ if [ "$(cat $PATH_TO_MISP/VERSION.json |jq -r .hotfix)" -le "108" ]; then
   exit 1
 fi
 
-
 # Include the lovely supportFunctions that are the base of MISP installer
 echo "Fetching MISP supportFunctions"
 eval "$(cat $PATH_TO_MISP/docs/generic/supportFunctions.md | grep -v \`\`\`)"
 
 # Combine SUDO_WWW and CAKE for ease of use
 CAKE="$SUDO_WWW$CAKE"
+
+# JSON Variables
+
+USER_JSON='{"User": {"email": "#EMAIL_ADDRESS#"}}'
+ORGA_JSON='{"Organisation": {"name": "#ORGA_NAME#", "uuid": "#ORGA_UUID#"}}'
+
+DBUSER_MISP=$(grep -o -P "(?<='login' => ').*(?=')" $PATH_TO_MISP/app/Config/database.php)
+DBPASSWORD_MISP=$(grep -o -P "(?<='password' => ').*(?=')" $PATH_TO_MISP/app/Config/database.php)
+DBNAME=$(grep -o -P "(?<='database' => ').*(?=')" $PATH_TO_MISP/app/Config/database.php)
+
+# TODO: Make use of Host/Port
+## DB_Port=$(grep -o -P "(?<='port' => ).*(?=,)" $PATH_TO_MISP/app/Config/database.php)
+## MISPDBHost=$(grep -o -P "(?<='host' => ').*(?=')" $PATH_TO_MISP/app/Config/database.php)
+AUTH_KEY=$(mysql --disable-column-names -B  -u $DBUSER_MISP -p"$DBPASSWORD_MISP" $DBNAME -e 'SELECT authkey FROM users WHERE role_id=1 LIMIT 1')
 
 # Variables section end
 
@@ -57,6 +70,58 @@ misp-wipe () {
   rc "Wipe done."
 }
 
+genKeys () {
+  echo "misp_url = 'https://localhost'
+misp_key = '${AUTH_KEY}'
+misp_verifycert = False
+" |tee /tmp/keys.py 1> /dev/null
+}
+
+genPyMISP () {
+  echo 'from keys import *
+from pymisp import ExpandedPyMISP, PyMISP
+import json
+
+misp = ExpandedPyMISP(misp_url, misp_key, misp_verifycert)
+
+print(json.dumps(misp.edit_organisation(1)))' |tee /tmp/getOrgInfo.py 1> /dev/null
+
+  echo 'from keys import *
+from pymisp import ExpandedPyMISP, PyMISP
+import json
+
+misp = ExpandedPyMISP(misp_url, misp_key, misp_verifycert)
+
+print(json.dumps(misp.edit_user(1)))' |tee /tmp/getUserInfo.py 1> /dev/null
+cp $PATH_TO_MISP/PyMISP/examples/edit_user_json.py /tmp
+# Next line needs merging up-stream
+if [[ ! -e $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py ]]; then
+  wget --no-cache -O /tmp/edit_organisation_json.py https://raw.githubusercontent.com/MISP/PyMISP/master/examples/edit_organisation_json.py
+else
+  cp $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py /tmp
+fi
+}
+
+getOrgInfo () {
+  [[ $(chkVenv) != "0" ]] && return
+  [[ ! -e /tmp/keys.py ]] && genKeys
+  [[ ! -e /tmp/getOrgInfo.py ]] && genPyMISP
+  orgInfo=$($PATH_TO_MISP/venv/bin/python /tmp/getOrgInfo.py 2>/dev/null)
+  [[ "$1" == "v" ]] && echo $orgInfo
+}
+
+getUserInfo () {
+  [[ $(chkVenv) != "0" ]] && return
+  [[ ! -e /tmp/keys.py ]] && genKeys
+  [[ ! -e /tmp/getUserInfo.py ]] && genPyMISP
+  userInfo=$($PATH_TO_MISP/venv/bin/python /tmp/getUserInfo.py 2>/dev/null)
+  [[ "$1" == "v" ]] && echo $userInfo
+}
+
+chkVenv () {
+  echo $(${PATH_TO_MISP}/venv/bin/python -V >/dev/null 2>&1; echo $?)
+}
+
 reset-org () {
   CAKE_ORG=$($CAKE Admin getSetting "MISP.org" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_ORG"| cut -f 1)
@@ -78,23 +143,53 @@ reset-org () {
     space
     echo -e "/\!\\ Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\nPress enter to continue with change."
     read
+    # Set the new UUID into the system settings via Cake
     NEW_UUID=$(uuidgen)
     $CAKE Admin setSetting "MISP.uuid" "$NEW_UUID"
+    # Set the new UUID in the existing base organisation via PyMISP
+    getOrgInfo
+    ORGA_NAME=$(echo $orgInfo |jq .Organisation.name)
+    ORGA_UUID=$NEW_UUID
+    if [[ $(chkVenv) == "0" ]]; then
+      echo $ORGA_JSON | sed "s/#ORGA_UUID#/$ORGA_UUID/" | sed "s/#ORGA_NAME#/$ORGA_NAME/" > /tmp/orga.json
+      $PATH_TO_MISP/venv/bin/python /tmp/edit_organisation_json.py -i 1 -f /tmp/orga.json
+    fi
+    
     rc "The new UUID is: $NEW_UUID"
   fi
 
-  ask_o "Do you want to reset the Organisation E-Mail?"
+  ask_o "Do you want to reset the notification E-Mail?"
   if [[ "$ANSWER" == "y" ]]; then
-    CAKE_ORG_EMAIL=$($CAKE Admin getSetting "MISP.email" |tail -n +7 |jq -r '[.description,.value] |@tsv')
-    DESCRIPTION=$(echo "$CAKE_ORG_EMAIL"| cut -f 1)
-    VALUE=$(echo "$CAKE_ORG_EMAIL"| cut -f 2)
+    CAKE_NOTIFICATION_EMAIL=$($CAKE Admin getSetting "MISP.email" |tail -n +7 |jq -r '[.description,.value] |@tsv')
+    DESCRIPTION=$(echo "$CAKE_NOTIFICATION_EMAIL"| cut -f 1)
+    VALUE=$(echo "$CAKE_NOTIFICATION_EMAIL"| cut -f 2)
     echo -e "The value of MISP.email is: $VALUE\n"
     echo "Here is the description of the setting: $DESCRIPTION"
     space
-    echo -n "Please enter the new Org E-Mail Address: "
+    echo -n "Please enter the new notification E-Mail Address: "
     read NEW_MAIL
+    # Set the new notification E-Mail into the system settings via Cake
     $CAKE Admin setSetting "MISP.email" "$NEW_MAIL"
-    rc "New Base Organisation name: $NEW_MAIL"
+    rc "New notification E-Mail address is: $NEW_MAIL"
+  fi
+
+  ask_o "Do you want to reset the Base Organisation admin E-Mail?"
+  if [[ "$ANSWER" == "y" ]]; then
+    getUserInfo v |jq
+    rc "Above you see the current configuration."
+    space
+    echo -n "Please enter the new E-Mail Address: "
+    read NEW_MAIL
+    # Set the new UUID in the existing base organisation via PyMISP
+    getUserInfo
+    USER_MAIL=$(echo $orgInfo |jq .User.email)
+    if [[ $(chkVenv) == "0" ]]; then
+      echo $USER_JSON | sed "s/#EMAIL_ADDRESS#/$USER_MAIL/" > /tmp/user.json
+      $PATH_TO_MISP/venv/bin/python /tmp/edit_user_json.py -i 1 -f /tmp/user.json
+    fi
+    
+    rc "The new UUID is: $NEW_UUID"
+
   fi
 
   rc "Org reset done."
@@ -238,15 +333,19 @@ regen-gpg () {
 
   # Export the public key to the webroot
   $SUDO_WWW sh -c "gpg --homedir $PATH_TO_MISP/.gnupg --export --armor $GPG_EMAIL_ADDRESS" | $SUDO_WWW tee $PATH_TO_MISP/app/webroot/gpg.gpg.asc
-  rm -f /tmp/gen-key-script
   $CAKE Admin setSetting "GnuPG.email" "$GPG_EMAIL_ADDRESS"
   $CAKE Admin setSetting "GnuPG.password" "$GPG_PASSPHRASE"
 
   rc "New PGP key created."
 }
 
-# Functions section begin
-
+cleanUp () {
+  rm /tmp/edit_user_json.py
+  rm /tmp/keys.py /tmp/getOrgInfo.py /tmp/getUserInfo.py
+  rm /tmp/orga.json /tmp/user.json
+  rm -f /tmp/gen-key-script
+}
+# Functions section end
 
 # Main section begin
 
@@ -287,5 +386,7 @@ case $OPTIONS in *"GPG"*) regen-gpg ;; esac
 #ask_o "Do you want to update MISP?
 #[[ "${ANSWER}" == "y" ]] && misp-update
 #case $OPTIONS in *"upd"*) misp-update ;; esac
+
+cleanUp > /dev/null 2>&1
 
 # Main section end
