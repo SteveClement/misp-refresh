@@ -141,7 +141,7 @@ reset-org () {
     echo -e "The value of MISP.uuid is: $VALUE\n"
     echo "Here is the description of the setting: $DESCRIPTION"
     space
-    echo -e "/\!\\ Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\nPress enter to continue with change."
+    echo -e "/!\\ Please do understand what impact this might have on synchronisations etc.\nOn new installs this is OK.\nPress enter to continue with change."
     read
     # Set the new UUID into the system settings via Cake
     NEW_UUID=$(uuidgen)
