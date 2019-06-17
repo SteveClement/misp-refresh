@@ -344,6 +344,7 @@ cleanUp () {
   rm /tmp/keys.py /tmp/getOrgInfo.py /tmp/getUserInfo.py
   rm /tmp/orga.json /tmp/user.json
   rm -f /tmp/gen-key-script
+  rm /tmp/refresh.sh
 }
 # Functions section end
 
