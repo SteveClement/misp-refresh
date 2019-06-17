@@ -184,11 +184,11 @@ reset-org () {
     getUserInfo
     USER_MAIL=$(echo $userInfo |jq -r .User.email)
     if [[ $(chkVenv) == "0" ]]; then
-      echo $USER_JSON | sed "s/#EMAIL_ADDRESS#/$USER_MAIL/" > /tmp/user.json
+      echo $USER_JSON | sed "s/#EMAIL_ADDRESS#/$NEW_MAIL/" > /tmp/user.json
       $PATH_TO_MISP/venv/bin/python /tmp/edit_user_json.py -i 1 -f /tmp/user.json 2> /dev/null
     fi
     
-    rc "The new UUID is: $NEW_UUID"
+    rc "The new E-Mail address is: $NEW_MAIL"
 
   fi
 
@@ -264,6 +264,8 @@ regen-cert () {
     read OPENSSL_EMAILADDRESS
   fi
 
+  getOrgInfo
+  OPENSSL_O=$(echo $orgInfo |jq -r .Organisation.name)
   ask_o "Using $OPENSSL_O as Organisation, do you want to change it?"
   if [[ "$ANSWER" == "y" ]]; then
     echo -n "Please enter the certificate Organisation: "
