@@ -14,7 +14,7 @@ eval "$(cat /var/www/MISP/docs/generic/globalVariables.md | grep -v \`\`\`)"
 MISPvars > /dev/null 2>&1
 
 if [ $(jq --version > /dev/null 2>&1; echo $?) == 127 ]; then
-  echo "jq not found, please install: sudo apt install jq"
+  echo -e "jq not found, please install:\nsudo apt install jq"
   exit 127
 fi
 
