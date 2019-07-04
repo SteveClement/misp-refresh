@@ -88,6 +88,13 @@ misp_verifycert = False
 " |tee /tmp/keys.py 1> /dev/null
 }
 
+# TODO: Finish implementation.
+resetAdmin () {
+  echo -n "Please enter new password for the Admin Mail $ADMIN_EMAIL : "
+  read PASSWORD
+  $CAKE Password $ADMIN_EMAIL $PASSWORD
+}
+
 genPyMISP () {
   echo 'from keys import *
 from pymisp import ExpandedPyMISP, PyMISP
@@ -392,6 +399,10 @@ fi
 
 # Enable colors
 colors
+
+# TODO: Test and implement properly
+#[[ -z "${DIALOG}" ]] && ask_o "Do you want to reset the ${LBLUE}MISP${NC} Admin Password?" && [[ "${ANSWER}" == "y" ]] && resetAdmin
+#case $OPTIONS in *"wipe"*) misp-wipe ;; esac
 
 # Use misp-wipe.sh to clean everything
 [[ -z "${DIALOG}" ]] && ask_o "Do you want to wipe this ${LBLUE}MISP${NC} instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
