@@ -133,6 +133,30 @@ chkVenv () {
   echo $(${PATH_TO_MISP}/venv/bin/python -V >/dev/null 2>&1; echo $?)
 }
 
+purge-log () {
+  folder_dest=/var/log/misp
+
+  [[ ! -d $folder_dest ]] && (sudo mkdir $folder_dest ; sudo chown $(id -u):$(id -g) $folder_dest)
+
+  # get today minus 6 month
+  dateForCleaning=$(date +'%Y-%m-%d' --date='-6 month')
+  #now=$(date +'%Y-%m-%d %')
+
+  # purge logs
+  QUERY1='SELECT count(*) from logs where date(created) <"'$dateForCleaning'";'
+  QUERY2='DELETE from logs WHERE date(created) < "'$dateForCleaning'";'
+  #echo $query
+
+  tmp=$(mysql -u $DBUSER_MISP -p"$DBPASSWORD_MISP" $DBNAME -N -e "$QUERY1")
+  mysql -u $DBUSER_MISP -p"$DBPASSWORD_MISP" $DBNAME -N -e "$QUERY2"
+  if [[ $? != 0 ]]; then
+    echo "Error in log purge"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') - $tmp lines in logs table before $dateForCleaning - ERROR during delete" >> $folder_dest/cleaning_6month.log
+  else
+    echo "$(date +'%Y-%m-%d %H:%M:%S') - $tmp lines in logs table before $dateForCleaning - No Error during deletion" >> $folder_dest/cleaning_6month.log
+  fi
+}
+
 reset-org () {
   CAKE_ORG=$($CAKE Admin getSetting "MISP.org" |tail -n +7 |jq -r '[.description,.value] |@tsv')
   DESCRIPTION=$(echo "$CAKE_ORG"| cut -f 1)
@@ -384,6 +408,7 @@ if [ ! -z "${DIALOG}" ]; then
         baseU "Reset BaseURL" off \
         baseO "Reset Base Organisation" off \
         texts "Reset Welcome Texts and Footers" off \
+        purgeLog "Purge Log Files" off \
         SSL "Regenerate self-signed SSL Cert " off \
         SSH "Regenerate SSH server key" off \
         GPG "Regenerate MISP GPG Key" off)
@@ -405,6 +430,9 @@ case $OPTIONS in *"baseO"*) reset-org ;; esac
 
 [[ -z "${DIALOG}" ]] && ask_o "Do you want to reset the welcome texts and footers?" && [[ "${ANSWER}" == "y" ]] && reset-texts
 case $OPTIONS in *"texts"*) reset-texts ;; esac
+
+[[ -z "${DIALOG}" ]] && ask_o "Do you want to purge the log files?" && [[ "${ANSWER}" == "y" ]] && purge-log
+case $OPTIONS in *"purgeLog"*) purge-log ;; esac
 
 [[ -z "${DIALOG}" ]] && ask_o "Do you want to regenerate the self-signed SSL certificate?" && [[ "${ANSWER}" == "y" ]] && regen-cert
 case $OPTIONS in *"SSL"*) regen-cert ;; esac
