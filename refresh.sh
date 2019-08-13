@@ -13,6 +13,27 @@ echo -e "Fetching ${LBLUE}MISP${NC} globalVariables"
 eval "$(cat /var/www/MISP/docs/generic/globalVariables.md | grep -v \`\`\`)"
 MISPvars > /dev/null 2>&1
 
+# Simple debug function with message (recycled from INSTALL.tpl.sh)
+
+# Make sure no alias exists
+[[ $(type -t debug) == "alias" ]] && unalias debug
+debug () {
+  if [[ ! -z $UNATTENDED ]]; then
+    # return
+  fi
+  echo -e "${RED}Next step:${NC} ${GREEN}$1${NC}" > /dev/tty
+  if [ ! -z $DEBUG ]; then
+    NO_PROGRESS=1
+    echo -e "${RED}Debug Mode${NC}, press ${LBLUE}enter${NC} to continue..." > /dev/tty
+    exec 3>&1
+    read
+  else
+    # [Set up conditional redirection](https://stackoverflow.com/questions/8756535/conditional-redirection-in-bash)
+    #exec 3>&1 &>/dev/null
+    :
+  fi
+}
+
 if [ $(jq --version > /dev/null 2>&1; echo $?) == 127 ]; then
   echo -e "jq not found, please install:\nsudo apt install jq"
   exit 127
@@ -21,6 +42,11 @@ fi
 if [ $(dialog > /dev/null 2>&1; echo $?) == 0 ]; then
   DIALOG=1
 fi
+
+# The setOpt/checkOpt function lives in generic/supportFunctions.md
+setOpt $@
+# Check for non-interactivity and be non-verbose
+checkOpt unattended && echo "${LBLUE}MISP${NC} Refresh ${GREEN}non-interactive${NC} selected"
 
 if [ "$(cat $PATH_TO_MISP/VERSION.json |jq -r .hotfix)" -le "108" ]; then
   echo "You need at least ${LBLUE}MISP${NC} v2.4.109 for this to work properly"
