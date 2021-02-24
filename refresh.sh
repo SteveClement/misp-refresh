@@ -114,7 +114,7 @@ print(json.dumps(misp.edit_user(1)))' |tee /tmp/getUserInfo.py 1> /dev/null
   cp $PATH_TO_MISP/PyMISP/examples/edit_user_json.py /tmp
   # Next line needs merging up-stream
   if [[ ! -e $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py ]]; then
-    wget --no-cache -O /tmp/edit_organisation_json.py https://raw.githubusercontent.com/MISP/PyMISP/master/examples/edit_organisation_json.py
+    wget --no-cache -O /tmp/edit_organisation_json.py https://raw.githubusercontent.com/MISP/PyMISP/main/examples/edit_organisation_json.py
   else
     cp $PATH_TO_MISP/PyMISP/examples/edit_organisation_json.py /tmp
   fi
