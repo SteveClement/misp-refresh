@@ -18,10 +18,9 @@ MISPvars > /dev/null 2>&1
 # Make sure no alias exists
 [[ $(type -t debug) == "alias" ]] && unalias debug
 debug () {
-  if [[ ! -z ${UNATTENDED} ]]; then
+  if [[ ! -z ${NI} ]]; then
     echo "Unattende mode active"
-    :
-    # return
+    DIALOG="0"
   fi
   echo -e "${RED}Next step:${NC} ${GREEN}$1${NC}" > /dev/tty
   if [ ! -z ${DEBUG} ]; then
@@ -45,6 +44,10 @@ if [[ $(dialog > /dev/null 2>&1; echo $?) == 0 ]]; then
   DIALOG=${DIALOG:-1}
 fi
 
+# Include the lovely supportFunctions that are the base of MISP installer
+echo "Fetching ${LBLUE}MISP${NC} supportFunctions"
+eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/supportFunctions.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(${SUDO_WWW} cat ${PATH_TO_MISP}/docs/generic/supportFunctions.md | | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)"
+
 # The setOpt/checkOpt function lives in generic/supportFunctions.md
 setOpt $@
 # Check for non-interactivity and be non-verbose
@@ -54,10 +57,6 @@ if [ "$(${SUDO_WWW} cat ${PATH_TO_MISP}/VERSION.json |jq -r .hotfix)" -le "108" 
   echo "You need at least ${LBLUE}MISP${NC} v2.4.109 for this to work properly"
   exit 1
 fi
-
-# Include the lovely supportFunctions that are the base of MISP installer
-echo "Fetching ${LBLUE}MISP${NC} supportFunctions"
-eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/supportFunctions.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(${SUDO_WWW} cat ${PATH_TO_MISP}/docs/generic/supportFunctions.md | | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)"
 
 # Combine SUDO_WWW and CAKE for ease of use
 CAKE="${SUDO_WWW}${CAKE}"
