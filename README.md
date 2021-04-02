@@ -1,6 +1,6 @@
 # Refresh a MISP instance
 
-This script will only work on Ubuntu 18.04
+This script will only work on Ubuntu >18.04
 
 No other support is planned.
 
@@ -21,7 +21,7 @@ Like: wipe all the data, re-generate SSL certificates, re-generate server SSH ke
 # Usage
 
 ```bash
-wget --no-cache -O /tmp/refresh.sh https://raw.githubusercontent.com/SteveClement/misp-refresh/master/refresh.sh ; bash /tmp/refresh.sh
+wget --no-cache -O /tmp/refresh.sh https://raw.githubusercontent.com/SteveClement/misp-refresh/main/refresh.sh ; bash /tmp/refresh.sh
 ```
 # License
 
