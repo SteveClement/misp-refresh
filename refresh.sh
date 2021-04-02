@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 # Variables section begin
-
 PATH_TO_MISP="${PATH_TO_MISP:-/var/www/MISP}"
 if [ ! -d ${PATH_TO_MISP} ]; then
   echo -e "This script expects ${LBLUE}MISP${NC} to be installed in ${YELLOW}${PATH_TO_MISP}${NC}, it does not exist, bye."
+  echo "You can override this by setting the environment variable: PATH_TO_MISP"
   exit 126
 fi
 
 # This makes use of the standard variables used by the installer
 echo -e "Fetching ${LBLUE}MISP${NC} globalVariables"
-eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/globalVariables.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(cat ${PATH_TO_MISP}/docs/generic/globalVariables.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)"
+eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/globalVariables.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(${SUDO_WWW} cat ${PATH_TO_MISP}/docs/generic/globalVariables.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)"
 MISPvars > /dev/null 2>&1
 
 # Simple debug function with message (recycled from INSTALL.tpl.sh)
@@ -50,14 +50,14 @@ setOpt $@
 # Check for non-interactivity and be non-verbose
 checkOpt unattended && echo "${LBLUE}MISP${NC} Refresh ${GREEN}non-interactive${NC} selected"
 
-if [ "$(cat ${PATH_TO_MISP}/VERSION.json |jq -r .hotfix)" -le "108" ]; then
+if [ "$(${SUDO_WWW} cat ${PATH_TO_MISP}/VERSION.json |jq -r .hotfix)" -le "108" ]; then
   echo "You need at least ${LBLUE}MISP${NC} v2.4.109 for this to work properly"
   exit 1
 fi
 
 # Include the lovely supportFunctions that are the base of MISP installer
 echo "Fetching ${LBLUE}MISP${NC} supportFunctions"
-eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/supportFunctions.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(cat ${PATH_TO_MISP}/docs/generic/globalVariables.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(cat ${PATH_TO_MISP}/docs/generic/supportFunctions.md | | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)"
+eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/supportFunctions.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(${SUDO_WWW} cat ${PATH_TO_MISP}/docs/generic/supportFunctions.md | | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)"
 
 # Combine SUDO_WWW and CAKE for ease of use
 CAKE="${SUDO_WWW}${CAKE}"
@@ -75,8 +75,8 @@ DBNAME=$(${SUDO_WWW} grep -o -P "(?<='database' => ').*(?=')" ${PATH_TO_MISP}/ap
 [[ "$?" != "0" ]] && (echo "Cannot set DBNAME please check permissions or paths." ; exit -1)
 
 # TODO: Make use of Host/Port
-## DB_Port=$(grep -o -P "(?<='port' => ).*(?=,)" $PATH_TO_MISP/app/Config/database.php)
-## MISPDBHost=$(grep -o -P "(?<='host' => ').*(?=')" $PATH_TO_MISP/app/Config/database.php)
+DB_Port=$(${SUDO_WWW} grep -m1 -o -P "(?<='port' => ).*(?=,)" ${PATH_TO_MISP}/app/Config/database.php) ; [[ -z ${MISPDBPort} ]] && MISPDBPort="3306"
+MISPDBHost=$(${SUDO_WWW} grep -o -P "(?<='host' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php) ; [[ -z ${MISPDBHost} ]] && MISPDBHost="localhost"
 AUTH_KEY=$(mysql --disable-column-names -B  -u ${DBUSER_MISP} -p"${DBPASSWORD_MISP}" ${DBNAME} -e 'SELECT authkey FROM users WHERE role_id=1 LIMIT 1')
 
 # Variables section end
