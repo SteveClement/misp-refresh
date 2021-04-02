@@ -65,11 +65,11 @@ CAKE="${SUDO_WWW}${CAKE}"
 USER_JSON='{"User": {"email": "#EMAIL_ADDRESS#"}}'
 ORGA_JSON='{"Organisation": {"name": "#ORGA_NAME#", "uuid": "#ORGA_UUID#"}}'
 
-DBUSER_MISP=$(grep -o -P "(?<='login' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php)
+DBUSER_MISP=$(${SUDO_WWW} grep -o -P "(?<='login' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php)
 [[ "$?" != "0" ]] && (echo "Cannot set DBUSER_MISP please check permissions or paths." ; exit -1)
-DBPASSWORD_MISP=$(grep -o -P "(?<='password' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php)
+DBPASSWORD_MISP=$(${SUDO_WWW} grep -o -P "(?<='password' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php)
 [[ "$?" != "0" ]] && (echo "Cannot set DBPASSWORD_MISP please check permissions or paths." ; exit -1)
-DBNAME=$(grep -o -P "(?<='database' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php)
+DBNAME=$(${SUDO_WWW} grep -o -P "(?<='database' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php)
 [[ "$?" != "0" ]] && (echo "Cannot set DBNAME please check permissions or paths." ; exit -1)
 
 # TODO: Make use of Host/Port
