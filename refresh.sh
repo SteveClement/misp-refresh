@@ -18,10 +18,8 @@ MISPvars > /dev/null 2>&1
 # Make sure no alias exists
 [[ $(type -t debug) == "alias" ]] && unalias debug
 debug () {
-  if [[ ! -z ${NI} ]]; then
-    echo "Unattende mode active"
-    DIALOG="0"
-  fi
+  [[ ! -z ${NI} ]] && echo "Unattende mode active"
+
   echo -e "${RED}Next step:${NC} ${GREEN}$1${NC}" > /dev/tty
   if [ ! -z ${DEBUG} ]; then
     NO_PROGRESS=1
@@ -40,24 +38,50 @@ if [ $(jq --version > /dev/null 2>&1; echo $?) == 127 ]; then
   exit 127
 fi
 
-if [[ $(dialog > /dev/null 2>&1; echo $?) == 0 ]]; then
-  DIALOG=${DIALOG:-1}
-fi
-
 # Include the lovely supportFunctions that are the base of MISP installer
 echo "Fetching ${LBLUE}MISP${NC} supportFunctions"
 eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/supportFunctions.md | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)" || eval "$(${SUDO_WWW} cat ${PATH_TO_MISP}/docs/generic/supportFunctions.md | | awk '/^# <snippet-begin/,0' | grep -v \`\`\`)"
 
+# Overwriting setOpt
+setOpt () {
+  options=()
+  for o in $@; do 
+    case "$o" in
+      ("-w") echo "misp-wipe"; WIPE=1 ;;
+      ("-b") echo "reset-baseurl"; BASEURL=1 ;;
+      ("-o") echo "reset-org"; ORG=1 ;;
+      ("-t") echo "reset-texts"; TEXTS=1 ;;
+      ("-a") echo "reset-adminPass"; adminPass=1 ;;
+      ("-l") echo "purge-log"; LOG=1 ;;
+      ("-c") echo "regen-cert"; CERT=1 ;;
+      ("-s") echo "regen-ssh"; SSH=1 ;;
+      ("-g") echo "regen-gpg"; GPG=1 ;;
+      ("-A") echo "all"; ALL=1 ;;
+      ("-N") echo "nuke"; NUKE=1 ;;
+      ("-U") echo "update"; UPDATE=1 ;;
+      ("-u") echo "unattended"; UNATTENDED=1 ;;
+      ("-ni") echo "noninteractive"; NI=1; DIALOG=0 ;;
+      ("-f") echo "force"; FORCE=1 ;;
+      (*) echo "$o is not a valid argument"; exit 1 ;;
+    esac
+  done
+}
+
 # The setOpt/checkOpt function lives in generic/supportFunctions.md
 setOpt $@
 # Check for non-interactivity and be non-verbose
-checkOpt unattended && echo "${LBLUE}MISP${NC} Refresh ${GREEN}non-interactive${NC} selected"
+checkOpt noninteractive && echo "${LBLUE}MISP${NC} Refresh ${GREEN}non-interactive${NC} selected"
 
 if [ "$(${SUDO_WWW} cat ${PATH_TO_MISP}/VERSION.json |jq -r .hotfix)" -le "108" ]; then
   echo "You need at least ${LBLUE}MISP${NC} v2.4.109 for this to work properly"
   exit 1
 fi
 
+# If we go non-interactive dialog is disabled
+([[ ! -z ${NI} ]] && [[ "${DIALOG}" == "0" ]]) || NI=0
+if [[ $(dialog > /dev/null 2>&1; echo $?) == 0 ]]; then
+  DIALOG=${DIALOG:-1}
+fi
 # Combine SUDO_WWW and CAKE for ease of use
 CAKE="${SUDO_WWW}${CAKE}"
 
@@ -91,16 +115,15 @@ rc () {
   echo -e "$1 ${GREEN}->${NC} ${LBLUE}Press enter to continue.${NC}"
   space
   space
-  read
-  clear
+  [[ "${NI}" == "0" ]] && read
+  #clear
 }
 
 misp-wipe () {
-  echo -e "${RED}/!\\ ${NC}THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE${NC} ${LBLUE}MISP${NC} ${RED}INSTANCE${NC}!\nThe default id=1 is NOT wiped. NOR is '${YELLOW}config.php${NC}' wiped.\n${LBLUE}PRESS ENTER TO CONTINUE...${NC}"
-  read
+  echo -e "${RED}/!\\ ${NC}THE FOLLOWING WILL ${RED}WIPE YOUR ENTIRE${NC} ${LBLUE}MISP${NC} ${RED}INSTANCE${NC}!\nThe default id=1 is NOT wiped. NOR is '${YELLOW}config.php${NC}' wiped.\n${LBLUE}${NC}"
+  rc "LAST INTERACTIVE CHANCE"
   echo "PATH_TO_MISP=${PATH_TO_MISP}" |${SUDO_WWW} tee ${PATH_TO_MISP}/tools/misp-wipe/misp-wipe.conf
-  cd ${PATH_TO_MISP}/tools/misp-wipe
-  sudo ./misp-wipe.sh
+  sudo -i CWD="${PATH_TO_MISP}/tools/misp-wipe/" ${PATH_TO_MISP}/tools/misp-wipe/misp-wipe.sh
   space
   rc "${GREEN}Wipe done.${NC}"
 }
@@ -432,7 +455,6 @@ cleanUp () {
 # Functions section end
 
 # Main section begin
-
 if [[ "${DIALOG}" == "1" ]]; then
   OPTIONS=$(dialog --checklist --output-fd 1 "Choose what operations to perform:" 15 60 7 \
         wipe "Wipe MISP instance" off \
@@ -454,34 +476,35 @@ colors
 #case $OPTIONS in *"wipe"*) misp-wipe ;; esac
 
 # Use misp-wipe.sh to clean everything
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to wipe this ${LBLUE}MISP${NC} instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && (ask_o "Do you want to wipe this ${LBLUE}MISP${NC} instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe) 
 case ${OPTIONS} in *"wipe"*) misp-wipe ;; esac
+([[ "${NI}" == "1" ]] && [[ "${WIPE}" == "1" ]]) && misp-wipe
 
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to reset the BaseURL?" && [[ "${ANSWER}" == "y" ]] && reset-baseurl
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && ask_o "Do you want to reset the BaseURL?" && [[ "${ANSWER}" == "y" ]] && reset-baseurl
 case ${OPTIONS} in *"baseU"*) reset-baseurl ;; esac
 
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to reset the Base Organisation?" && [[ "${ANSWER}" == "y" ]] && reset-org
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && ask_o "Do you want to reset the Base Organisation?" && [[ "${ANSWER}" == "y" ]] && reset-org
 case ${OPTIONS} in *"baseO"*) reset-org ;; esac
 
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to reset the welcome texts and footers?" && [[ "${ANSWER}" == "y" ]] && reset-texts
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && ask_o "Do you want to reset the welcome texts and footers?" && [[ "${ANSWER}" == "y" ]] && reset-texts
 case ${OPTIONS} in *"texts"*) reset-texts ;; esac
 
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to purge the log files?" && [[ "${ANSWER}" == "y" ]] && purge-log
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && ask_o "Do you want to purge the log files?" && [[ "${ANSWER}" == "y" ]] && purge-log
 case ${OPTIONS} in *"purgeLog"*) purge-log ;; esac
 
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to regenerate the self-signed SSL certificate?" && [[ "${ANSWER}" == "y" ]] && regen-cert
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && ask_o "Do you want to regenerate the self-signed SSL certificate?" && [[ "${ANSWER}" == "y" ]] && regen-cert
 case ${OPTIONS} in *"SSL"*) regen-cert ;; esac
 
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to regenerate the SSH server keys?" && [[ "${ANSWER}" == "y" ]] && regen-ssh
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && ask_o "Do you want to regenerate the SSH server keys?" && [[ "${ANSWER}" == "y" ]] && regen-ssh
 case ${OPTIONS} in *"SSH"*) regen-ssh ;; esac
 
-[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to regenerate the ${LBLUE}MISP${NC} GPG keys?" && [[ "${ANSWER}" == "y" ]] && regen-gpg
+([[ "${DIALOG}" == "0" ]] && [[ "${NI}" == "0" ]]) && ask_o "Do you want to regenerate the ${LBLUE}MISP${NC} GPG keys?" && [[ "${ANSWER}" == "y" ]] && regen-gpg
 case ${OPTIONS} in *"GPG"*) regen-gpg ;; esac
 
 #ask_o "Do you want to update MISP?
 #[[ "${ANSWER}" == "y" ]] && misp-update
 #case ${OPTIONS} in *"upd"*) misp-update ;; esac
 
-cleanUp > /dev/null 2>&1
+## cleanUp > /dev/null 2>&1
 
 # Main section end
