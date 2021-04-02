@@ -19,6 +19,8 @@ MISPvars > /dev/null 2>&1
 [[ $(type -t debug) == "alias" ]] && unalias debug
 debug () {
   if [[ ! -z ${UNATTENDED} ]]; then
+    echo "Unattende mode active"
+    :
     # return
   fi
   echo -e "${RED}Next step:${NC} ${GREEN}$1${NC}" > /dev/tty
