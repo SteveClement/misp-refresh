@@ -41,7 +41,7 @@ if [ $(jq --version > /dev/null 2>&1; echo $?) == 127 ]; then
   exit 127
 fi
 
-if [ $(dialog > /dev/null 2>&1; echo $?) == 0 ]; then
+if [[ $(dialog > /dev/null 2>&1; echo $?) == 0 ]]; then
   DIALOG=${DIALOG:-1}
 fi
 
@@ -63,7 +63,6 @@ eval "$(curl -fsSL https://raw.githubusercontent.com/MISP/MISP/2.4/docs/generic/
 CAKE="${SUDO_WWW}${CAKE}"
 
 # JSON Variables
-
 USER_JSON='{"User": {"email": "#EMAIL_ADDRESS#"}}'
 ORGA_JSON='{"Organisation": {"name": "#ORGA_NAME#", "uuid": "#ORGA_UUID#"}}'
 
@@ -435,7 +434,7 @@ cleanUp () {
 
 # Main section begin
 
-if [ ! -z "${DIALOG}" ]; then
+if [[ "${DIALOG}" == "1" ]]; then
   OPTIONS=$(dialog --checklist --output-fd 1 "Choose what operations to perform:" 15 60 7 \
         wipe "Wipe MISP instance" off \
         baseU "Reset BaseURL" off \
@@ -452,32 +451,32 @@ fi
 colors
 
 # TODO: Test and implement properly
-#[[ -z "${DIALOG}" ]] && ask_o "Do you want to reset the ${LBLUE}MISP${NC} Admin Password?" && [[ "${ANSWER}" == "y" ]] && resetAdmin
+#[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to reset the ${LBLUE}MISP${NC} Admin Password?" && [[ "${ANSWER}" == "y" ]] && resetAdmin
 #case $OPTIONS in *"wipe"*) misp-wipe ;; esac
 
 # Use misp-wipe.sh to clean everything
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to wipe this ${LBLUE}MISP${NC} instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to wipe this ${LBLUE}MISP${NC} instance?" && [[ "${ANSWER}" == "y" ]] && misp-wipe
 case ${OPTIONS} in *"wipe"*) misp-wipe ;; esac
 
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to reset the BaseURL?" && [[ "${ANSWER}" == "y" ]] && reset-baseurl
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to reset the BaseURL?" && [[ "${ANSWER}" == "y" ]] && reset-baseurl
 case ${OPTIONS} in *"baseU"*) reset-baseurl ;; esac
 
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to reset the Base Organisation?" && [[ "${ANSWER}" == "y" ]] && reset-org
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to reset the Base Organisation?" && [[ "${ANSWER}" == "y" ]] && reset-org
 case ${OPTIONS} in *"baseO"*) reset-org ;; esac
 
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to reset the welcome texts and footers?" && [[ "${ANSWER}" == "y" ]] && reset-texts
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to reset the welcome texts and footers?" && [[ "${ANSWER}" == "y" ]] && reset-texts
 case ${OPTIONS} in *"texts"*) reset-texts ;; esac
 
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to purge the log files?" && [[ "${ANSWER}" == "y" ]] && purge-log
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to purge the log files?" && [[ "${ANSWER}" == "y" ]] && purge-log
 case ${OPTIONS} in *"purgeLog"*) purge-log ;; esac
 
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to regenerate the self-signed SSL certificate?" && [[ "${ANSWER}" == "y" ]] && regen-cert
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to regenerate the self-signed SSL certificate?" && [[ "${ANSWER}" == "y" ]] && regen-cert
 case ${OPTIONS} in *"SSL"*) regen-cert ;; esac
 
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to regenerate the SSH server keys?" && [[ "${ANSWER}" == "y" ]] && regen-ssh
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to regenerate the SSH server keys?" && [[ "${ANSWER}" == "y" ]] && regen-ssh
 case ${OPTIONS} in *"SSH"*) regen-ssh ;; esac
 
-[[ -z "${DIALOG}" ]] && ask_o "Do you want to regenerate the ${LBLUE}MISP${NC} GPG keys?" && [[ "${ANSWER}" == "y" ]] && regen-gpg
+[[ "${DIALOG}" == "0" ]] && ask_o "Do you want to regenerate the ${LBLUE}MISP${NC} GPG keys?" && [[ "${ANSWER}" == "y" ]] && regen-gpg
 case ${OPTIONS} in *"GPG"*) regen-gpg ;; esac
 
 #ask_o "Do you want to update MISP?
