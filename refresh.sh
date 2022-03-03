@@ -94,7 +94,7 @@ DBPASSWORD_MISP=$(${SUDO_WWW} grep -o -P "(?<='password' => ').*(?=')" ${PATH_TO
 DBNAME=$(${SUDO_WWW} grep -o -P "(?<='database' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php) ; [[ "$?" != "0" ]] && (echo "Cannot set DBNAME please check permissions or paths." ; exit -1)
 DB_Port=$(${SUDO_WWW} grep -m1 -o -P "(?<='port' => ).*(?=,)" ${PATH_TO_MISP}/app/Config/database.php) ; [[ -z ${MISPDBPort} ]] && MISPDBPort="3306"
 MISPDBHost=$(${SUDO_WWW} grep -o -P "(?<='host' => ').*(?=')" ${PATH_TO_MISP}/app/Config/database.php) ; [[ -z ${MISPDBHost} ]] && MISPDBHost="localhost"
-AUTH_KEY=$(mysql --disable-column-names -B  -u ${DBUSER_MISP} -p"${DBPASSWORD_MISP}" ${DBNAME} -e 'SELECT authkey FROM users WHERE role_id=1 LIMIT 1')
+AUTH_KEY=$(mysql -h ${MISPDBHost} -P ${MISPDBPort} --disable-column-names -B  -u ${DBUSER_MISP} -p"${DBPASSWORD_MISP}" ${DBNAME} -e 'SELECT authkey FROM users WHERE role_id=1 LIMIT 1')
 
 # Variables section end
 
@@ -201,8 +201,8 @@ purge-log () {
   QUERY2='DELETE from logs WHERE date(created) < "'${dateForCleaning}'";'
   #echo $query
 
-  tmp=$(mysql -u ${DBUSER_MISP} -p"${DBPASSWORD_MISP}" ${DBNAME} -N -e "${QUERY1}")
-  mysql -u ${DBUSER_MISP} -p"${DBPASSWORD_MISP}" ${DBNAME} -N -e "${QUERY2}"
+  tmp=$(mysql -h ${MISPDBHost} -P ${MISPDBPort} -u ${DBUSER_MISP} -p"${DBPASSWORD_MISP}" ${DBNAME} -N -e "${QUERY1}")
+  mysql -h ${MISPDBHost} -P ${MISPDBPort} -u ${DBUSER_MISP} -p"${DBPASSWORD_MISP}" ${DBNAME} -N -e "${QUERY2}"
   if [[ $? != 0 ]]; then
     echo "Error in log purge"
     echo "$(date +'%Y-%m-%d %H:%M:%S') - ${tmp} lines in logs table before ${dateForCleaning} - ERROR during delete" >> ${folder_dest}/cleaning_6month.log
